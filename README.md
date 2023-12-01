@@ -16,6 +16,10 @@ Programme pour gérer les IO des PAMI Terraforming Mars 2024 sur une Arduino Nan
 
 Les valeurs sont des entiers signés sur deux octets.
 
+#### Arrêter de piloter les servos
+
+`D`
+
 #### Afficher les valeurs des inputs (debug Serial uniquement)
 
 `F`

@@ -62,8 +62,8 @@ void processRequest(int length, boolean wire)
 #endif
     }
 
-    servo1.write(val_servo1);
-    servo2.write(val_servo2);
+    servo1.writeMicroseconds(val_servo1);
+    servo2.writeMicroseconds(val_servo2);
 
     if (!servo_init)
     {
@@ -71,6 +71,12 @@ void processRequest(int length, boolean wire)
       servo2.attach(SERVO2);
       servo_init = true;
     }
+    break;
+
+  case 'D':
+    servo1.detach(SERVO1);
+    servo2.detach(SERVO2);
+    servo_init = false;
     break;
 
   case 'F': // Serial only
