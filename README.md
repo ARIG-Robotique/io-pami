@@ -3,8 +3,8 @@
 Programme pour gérer les IO des PAMI Terraforming Mars 2024 sur une Arduino Nano en I2C.
 
 - 2 servos
-- 3 entrées numériques
-- 3 entrées analogiques
+- 3 entrées numériques (pullup)
+- 3 GP2D12
 
 ## Protocole
 
@@ -14,7 +14,7 @@ Programme pour gérer les IO des PAMI Terraforming Mars 2024 sur une Arduino Nan
 
 `S<valeur servo1><valeur servo2>`
 
-Les valeurs sont des entiers signés sur deux octets.
+Les valeurs (microsecondes) sont des entiers signés sur deux octets.
 
 #### Arrêter de piloter les servos
 
@@ -26,6 +26,6 @@ Les valeurs sont des entiers signés sur deux octets.
 
 ### Réponse
 
-`<valeur d1><valeur d2><valeur d3><valeur a1><valeur a2><valeur a3>`
+`<input1><input2><input3><gp2d1><gp2d2><gp2d3>`
 
-Valeurs numériques (0 ou 1) sur un octet, valeurs analogiques (entiers signés) sur deux octets.
+Les valeurs numériques (0 ou 1) et les valeurs des GP2D (distance) sont sur un octet.

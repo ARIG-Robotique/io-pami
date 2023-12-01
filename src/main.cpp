@@ -1,24 +1,25 @@
 #include <Arduino.h>
 #include <Wire.h>
 #include <Servo.h>
+#include <I2C_Anything.h>
 
 #define DEBUG
 #define I2C_ADD 0x55
 #define SERVO1 12
 #define SERVO2 11
-#define INPUT_D1 9
-#define INPUT_D2 8
-#define INPUT_D3 7
-#define INPUT_A1 A0
-#define INPUT_A2 A1
-#define INPUT_A3 A2
+#define INPUT1 9
+#define INPUT2 8
+#define INPUT3 7
+#define GP2D1 A0
+#define GP2D2 A1
+#define GP2D3 A2
 
-bool val_d1 = 0;
-bool val_d2 = 0;
-bool val_d3 = 0;
-int val_a1 = 0;
-int val_a2 = 0;
-int val_a3 = 0;
+bool val_input1 = 0;
+bool val_input2 = 0;
+bool val_input3 = 0;
+uint8_t val_gp2d1 = 0;
+uint8_t val_gp2d2 = 0;
+uint8_t val_gp2d3 = 0;
 int val_servo1 = DEFAULT_PULSE_WIDTH;
 int val_servo2 = DEFAULT_PULSE_WIDTH;
 
@@ -26,21 +27,28 @@ bool servo_init = false;
 Servo servo1;
 Servo servo2;
 
-// https://github.com/nickgammon/I2C_Anything
-template <typename T>
-unsigned int I2C_writeAnything(const T &value)
+void processResponse(bool wire)
 {
-  return Wire.write((byte *)&value, sizeof(value));
-}
-
-template <typename T>
-unsigned int I2C_readAnything(T &value)
-{
-  byte *p = (byte *)&value;
-  unsigned int i;
-  for (i = 0; i < sizeof value; i++)
-    *p++ = Wire.read();
-  return i;
+  if (wire)
+  {
+    I2C_writeAnything(val_input1);
+    I2C_writeAnything(val_input2);
+    I2C_writeAnything(val_input3);
+    I2C_writeAnything(val_gp2d1);
+    I2C_writeAnything(val_gp2d2);
+    I2C_writeAnything(val_gp2d3);
+  }
+  else
+  {
+#ifdef DEBUG
+    Serial.println(val_input1);
+    Serial.println(val_input2);
+    Serial.println(val_input3);
+    Serial.println(val_gp2d1);
+    Serial.println(val_gp2d2);
+    Serial.println(val_gp2d3);
+#endif
+  }
 }
 
 void processRequest(int length, boolean wire)
@@ -74,8 +82,8 @@ void processRequest(int length, boolean wire)
     break;
 
   case 'D':
-    servo1.detach(SERVO1);
-    servo2.detach(SERVO2);
+    servo1.detach();
+    servo2.detach();
     servo_init = false;
     break;
 
@@ -95,30 +103,6 @@ void processRequest(int length, boolean wire)
   }
 }
 
-void processResponse(bool wire)
-{
-  if (wire)
-  {
-    I2C_writeAnything(val_d1);
-    I2C_writeAnything(val_d2);
-    I2C_writeAnything(val_d3);
-    I2C_writeAnything(val_a1);
-    I2C_writeAnything(val_a2);
-    I2C_writeAnything(val_a3);
-  }
-  else
-  {
-#ifdef DEBUG
-    Serial.println(val_d1);
-    Serial.println(val_d2);
-    Serial.println(val_d3);
-    Serial.println(val_a1);
-    Serial.println(val_a2);
-    Serial.println(val_a3);
-#endif
-  }
-}
-
 void I2C_RxHandler(int numBytes)
 {
   processRequest(numBytes, true);
@@ -129,15 +113,22 @@ void I2C_TxHandler(void)
   processResponse(true);
 }
 
+// https://swanrobotics.com/projects/gp2d12_project/
+uint8_t readGP2D(uint8_t pin)
+{
+  int val = analogRead(pin);
+  return round(6787.0 / (val - 3.0)) - 4.0;
+}
+
 void setup()
 {
 #ifdef DEBUG
   Serial.begin(115200);
 #endif
 
-  pinMode(INPUT_D1, INPUT_PULLUP);
-  pinMode(INPUT_D2, INPUT_PULLUP);
-  pinMode(INPUT_D3, INPUT_PULLUP);
+  pinMode(INPUT1, INPUT_PULLUP);
+  pinMode(INPUT2, INPUT_PULLUP);
+  pinMode(INPUT3, INPUT_PULLUP);
 
   Wire.begin(I2C_ADD);
   Wire.onReceive(I2C_RxHandler);
@@ -153,11 +144,11 @@ void loop()
   }
 #endif
 
-  val_d1 = digitalRead(INPUT_D1);
-  val_d2 = digitalRead(INPUT_D2);
-  val_d3 = digitalRead(INPUT_D3);
+  val_input1 = digitalRead(INPUT1);
+  val_input2 = digitalRead(INPUT2);
+  val_input3 = digitalRead(INPUT3);
 
-  val_a1 = analogRead(INPUT_A1);
-  val_a2 = analogRead(INPUT_A2);
-  val_a3 = analogRead(INPUT_A3);
+  val_gp2d1 = readGP2D(GP2D1);
+  val_gp2d2 = readGP2D(GP2D2);
+  val_gp2d3 = readGP2D(GP2D3);
 }
