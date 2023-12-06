@@ -5,14 +5,14 @@
 
 #define DEBUG
 #define I2C_ADD 0x55
-#define SERVO1 12
-#define SERVO2 11
-#define INPUT1 9
-#define INPUT2 8
-#define INPUT3 7
+#define SERVO1 2
+#define SERVO2 3
+#define INPUT1 4
+#define INPUT2 5
+#define INPUT3 6
 #define GP2D1 A0
-#define GP2D2 A1
-#define GP2D3 A2
+#define GP2D2 A2
+#define GP2D3 A7
 
 bool val_input1 = 0;
 bool val_input2 = 0;
