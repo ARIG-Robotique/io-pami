@@ -66,7 +66,8 @@ void processRequest(int length, boolean wire)
     else
     {
 #ifdef DEBUG
-      Serial.println(F("Pas implémenté"));
+      val_servo1 = Serial.parseInt(SKIP_ALL, '\n');
+      val_servo2 = Serial.parseInt(SKIP_ALL, '\n');
 #endif
     }
 
@@ -75,8 +76,8 @@ void processRequest(int length, boolean wire)
 
     if (!servo_init)
     {
-      servo1.attach(SERVO1);
-      servo2.attach(SERVO2);
+      servo1.attach(SERVO1, 500, 2500);
+      servo2.attach(SERVO2, 500, 2500);
       servo_init = true;
     }
     break;
