@@ -38,9 +38,15 @@ void processResponse(bool wire) {
         I2C_writeAnything(val_gp2d3);
     } else {
 #ifdef DEBUG
+        Serial.println("Raw inputs :");
         Serial.println(val_input1);
         Serial.println(val_input2);
         Serial.println(val_input3);
+
+        Serial.println("Inputs computed :");
+        Serial.println(inputs);
+
+        Serial.println("GP2Ds");
         Serial.println(val_gp2d1);
         Serial.println(val_gp2d2);
         Serial.println(val_gp2d3);
