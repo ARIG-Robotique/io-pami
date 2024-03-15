@@ -28,10 +28,11 @@ Servo servo1;
 Servo servo2;
 
 void processResponse(bool wire) {
+    byte inputs = val_input1 ? 1 : 0;
+    inputs += val_input2 ? 2 : 0;
+    inputs += val_input3 ? 4 : 0;
     if (wire) {
-        I2C_writeAnything(val_input1);
-        I2C_writeAnything(val_input2);
-        I2C_writeAnything(val_input3);
+        I2C_writeAnything(inputs);
         I2C_writeAnything(val_gp2d1);
         I2C_writeAnything(val_gp2d2);
         I2C_writeAnything(val_gp2d3);
