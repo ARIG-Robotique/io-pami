@@ -116,12 +116,22 @@ uint8_t readGP2D(uint8_t pin) {
 void setup() {
 #ifdef DEBUG
     Serial.begin(115200);
+    delay(2000);
+    Serial.println("Setup start :");
 #endif
 
+#ifdef DEBUG
+    Serial.println(" * Input configuration ...");
+#endif
     pinMode(INPUT1, INPUT_PULLUP);
     pinMode(INPUT2, INPUT_PULLUP);
     pinMode(INPUT3, INPUT_PULLUP);
 
+#ifdef DEBUG
+    Serial.println(" * I2C master configuration ...");
+    Serial.print("   -> I2C master address : 0x");
+    Serial.println(I2C_ADD, HEX);
+#endif
     Wire.begin(I2C_ADD);
     Wire.onReceive(I2C_RxHandler);
     Wire.onRequest(I2C_TxHandler);
