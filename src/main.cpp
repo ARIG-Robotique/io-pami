@@ -25,6 +25,7 @@ int val_servo2 = DEFAULT_PULSE_WIDTH;
 bool servo_init = false;
 Servo servo1;
 Servo servo2;
+String firmwareVersion;
 
 void processResponse(bool wire) {
     byte inputs = val_input1 ? 1 : 0;
@@ -90,6 +91,17 @@ void processRequest(int length, boolean wire) {
                 break;
             }
 
+        case 'V':
+            if (wire) {
+                I2C_writeAnything(firmwareVersion);
+            } else {
+#ifdef DEBUG
+                Serial.print("Version : ");
+                Serial.println(firmwareVersion);
+#endif
+            }
+            break;
+
         default:
 #ifdef DEBUG
             Serial.print(F("Requete inconnue "));
@@ -135,6 +147,16 @@ void setup() {
     Wire.begin(I2C_ADD);
     Wire.onReceive(I2C_RxHandler);
     Wire.onRequest(I2C_TxHandler);
+
+    // Compute version String
+#ifdef DEBUG
+    Serial.println(" * Compute firmware version ...");
+#endif
+    firmwareVersion = String(TIMESTAMP) + "-" + String(COMMIT_HASH);
+#ifdef DEBUG
+    Serial.print("   -> Version : ");
+    Serial.println(firmwareVersion);
+#endif
 }
 
 void loop() {
