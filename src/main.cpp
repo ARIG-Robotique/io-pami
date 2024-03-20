@@ -3,7 +3,6 @@
 #include <Servo.h>
 #include <I2C_Anything.h>
 
-#define DEBUG
 #define I2C_ADD 0x55
 #define SERVO1 2
 #define SERVO2 3
