@@ -65,7 +65,14 @@ void processRequest(int length, boolean wire) {
                 I2C_readAnything(val_servo);
             } else {
 #ifdef DEBUG
-                val_servo = Serial.parseInt(SKIP_ALL, '\n');
+                while(!Serial.available());
+                val_servo = Serial.read();
+                while(!Serial.available());
+                val_servo += Serial.read() << 8;
+                Serial.print("Servo ");
+                Serial.print(c - 0x30, HEX);
+                Serial.print(" -> 0x");
+                Serial.println(val_servo, HEX);
 #endif
             }
             if (c == 0x30) {
