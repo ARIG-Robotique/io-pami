@@ -58,19 +58,23 @@ void processRequest(int length, boolean wire) {
     char c = wire ? Wire.read() : Serial.read();
 
     switch (c) {
-        case 'S':
+        case 0x30: // '0'
+        case 0x31: // '1'
+            int val_servo;
             if (wire) {
-                I2C_readAnything(val_servo1);
-                I2C_readAnything(val_servo2);
+                I2C_readAnything(val_servo);
             } else {
 #ifdef DEBUG
-                val_servo1 = Serial.parseInt(SKIP_ALL, '\n');
-                val_servo2 = Serial.parseInt(SKIP_ALL, '\n');
+                val_servo = Serial.parseInt(SKIP_ALL, '\n');
 #endif
             }
-
-            servo1.writeMicroseconds(val_servo1);
-            servo2.writeMicroseconds(val_servo2);
+            if (c == 0x30) {
+                val_servo1 = val_servo;
+                servo1.writeMicroseconds(val_servo1);
+            } else {
+                val_servo2 = val_servo;
+                servo2.writeMicroseconds(val_servo2);
+            }
 
             if (!servo_init) {
                 servo1.attach(SERVO1, 500, 2500);
