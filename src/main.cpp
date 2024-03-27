@@ -1,123 +1,129 @@
 #include <Arduino.h>
-#include <Wire.h>
-#include <Servo.h>
-#include <I2C_Anything.h>
+#include <Adafruit_PWMServoDriver.h>
 
-#define I2C_ADD 0x55
-#define SERVO1 2
-#define SERVO2 3
-#define INPUT1 4
-#define INPUT2 5
-#define INPUT3 6
-#define GP2D1 A0
-#define GP2D2 A2
-#define GP2D3 A7
+#define DIRA 3
+#define PWMA 2
+#define DIRB 7
+#define PWMB 6
 
-bool val_input1 = false;
-bool val_input2 = false;
-bool val_input3 = false;
-uint8_t val_gp2d1 = 0;
-uint8_t val_gp2d2 = 0;
-uint8_t val_gp2d3 = 0;
-int val_servo1 = DEFAULT_PULSE_WIDTH;
-int val_servo2 = DEFAULT_PULSE_WIDTH;
+#define PWM_ROUE 8
+#define IN1_ROUE 10
+#define IN2_ROUE 9
 
-bool servo_init = false;
-Servo servo1;
-Servo servo2;
-String firmwareVersion;
+#define PWM_EA 12
+#define IN1_EA 14
+#define IN2_EA 13
+
+Adafruit_PWMServoDriver pwm = Adafruit_PWMServoDriver();
+
+void testPin(uint8_t pin) {
+    Serial.print("Pin ");
+    Serial.print(pin);
+    Serial.println(" ON");
+    pwm.setPin(pin, 4096);
+    delay(5000);
+    Serial.print("Pin ");
+    Serial.print(pin);
+    Serial.println(" OFF");
+    pwm.setPin(pin, 0);
+    delay(5000);
+}
 
 void processResponse(bool wire) {
-    byte inputs = val_input1 ? 1 : 0;
-    inputs += val_input2 ? 2 : 0;
-    inputs += val_input3 ? 4 : 0;
-    if (wire) {
-        I2C_writeAnything(inputs);
-        I2C_writeAnything(val_gp2d1);
-        I2C_writeAnything(val_gp2d2);
-        I2C_writeAnything(val_gp2d3);
-    } else {
-#ifdef DEBUG
-        Serial.println("Raw inputs :");
-        Serial.println(val_input1);
-        Serial.println(val_input2);
-        Serial.println(val_input3);
 
-        Serial.println("Inputs computed :");
-        Serial.println(inputs);
-
-        Serial.println("GP2Ds");
-        Serial.println(val_gp2d1);
-        Serial.println(val_gp2d2);
-        Serial.println(val_gp2d3);
-#endif
-    }
 }
 
 void processRequest(int length, boolean wire) {
     char c = wire ? Wire.read() : Serial.read();
 
     switch (c) {
-        case 0x30: // '0'
-        case 0x31: // '1'
-            int val_servo;
-            if (wire) {
-                I2C_readAnything(val_servo);
-            } else {
-#ifdef DEBUG
-                while(!Serial.available());
-                val_servo = Serial.read();
-                while(!Serial.available());
-                val_servo += Serial.read() << 8;
-                Serial.print("Servo ");
-                Serial.print(c - 0x30, HEX);
-                Serial.print(" -> 0x");
-                Serial.println(val_servo, HEX);
-#endif
+        case 'M':
+            Serial.println("Motor 1 & 2 : Forward");
+            pwm.setPin(DIRA, 4096);
+            pwm.setPin(DIRB, 4096);
+            for (unsigned int i = 0 ; i < 1024 ; i++) {
+                Serial.print("Motor 1 & 2 : ");
+                Serial.println(i);
+                pwm.setPin(PWMA, i);
+                pwm.setPin(PWMB, i);
+                delay(10);
             }
-            if (c == 0x30) {
-                val_servo1 = val_servo;
-                servo1.writeMicroseconds(val_servo1);
-            } else {
-                val_servo2 = val_servo;
-                servo2.writeMicroseconds(val_servo2);
-            }
+            Serial.println("Motor 1 & 2 : Stop");
+            pwm.setPin(PWMA, 0);
+            pwm.setPin(PWMB, 0);
+            delay(2000);
 
-            if (!servo_init) {
-                servo1.attach(SERVO1, 500, 2500);
-                servo2.attach(SERVO2, 500, 2500);
-                servo_init = true;
+            Serial.println("Motor 1 & 2 : Reverse");
+            pwm.setPin(DIRA, 0);
+            pwm.setPin(DIRB, 0);
+            for (unsigned int i = 0 ; i < 1024 ; i++) {
+                Serial.print("Motor 1 & 2 : -");
+                Serial.println(i);
+                pwm.setPin(PWMA, i);
+                pwm.setPin(PWMB, i);
+                delay(10);
             }
+            Serial.println("Motor 1 & 2 : Stop");
+            pwm.setPin(PWMA, 0);
+            pwm.setPin(PWMB, 0);
+
             break;
 
-        case 'D':
-            servo1.detach();
-            servo2.detach();
-            servo_init = false;
+        case 'E':
+            Serial.println("Electro Aimant ON");
+            pwm.setPin(PWM_EA, 4096);
+            delay(2000);
+            Serial.println("Electro Aimant OFF");
+            pwm.setPin(PWM_EA, 0);
+
             break;
 
-        case 'F': // Serial only
-            if (!wire) {
-                processResponse(false);
-                break;
+        case 'R':
+            Serial.println("Roue : Forward");
+            pwm.setPin(IN1_ROUE, 0);
+            pwm.setPin(IN2_ROUE, 4096);
+            for (unsigned int i = 0 ; i < 1024 ; i++) {
+                Serial.print("Roue : ");
+                Serial.println(i);
+                pwm.setPin(PWM_ROUE, i);
+                delay(10);
             }
+            Serial.println("Roue : Stop");
+            pwm.setPin(IN1_ROUE, 0);
+            pwm.setPin(IN2_ROUE, 0);
+            pwm.setPin(PWM_ROUE, 0);
+            delay(2000);
 
-        case 'V':
-            if (wire) {
-                I2C_writeAnything(firmwareVersion);
-            } else {
-#ifdef DEBUG
-                Serial.print("Version : ");
-                Serial.println(firmwareVersion);
-#endif
+            Serial.println("Motor 1 & 2 : Reverse");
+            pwm.setPin(IN1_ROUE, 4096);
+            pwm.setPin(IN2_ROUE, 0);
+            for (unsigned int i = 0 ; i < 1024 ; i++) {
+                Serial.print("Roue : -");
+                Serial.println(i);
+                pwm.setPin(PWM_ROUE, i);
+                delay(10);
             }
+            Serial.println("Roue : Stop");
+            pwm.setPin(IN1_ROUE, 0);
+            pwm.setPin(IN2_ROUE, 0);
+            pwm.setPin(PWM_ROUE, 0);
             break;
 
-        default:
-#ifdef DEBUG
-            Serial.print(F("Requete inconnue "));
-            Serial.println(c);
-#endif
+        case 'T':
+            testPin(PWMA);
+            testPin(DIRA);
+
+            testPin(PWMB);
+            testPin(DIRB);
+
+            testPin(PWM_ROUE);
+            testPin(IN1_ROUE);
+            testPin(IN2_ROUE);
+
+            testPin(PWM_EA);
+            testPin(IN1_EA);
+            testPin(IN2_EA);
+
             break;
     }
 }
@@ -130,12 +136,6 @@ void I2C_TxHandler(void) {
     processResponse(true);
 }
 
-// https://swanrobotics.com/projects/gp2d12_project/
-uint8_t readGP2D(uint8_t pin) {
-    int val = analogRead(pin);
-    return round(6787.0 / (val - 3.0)) - 4.0;
-}
-
 void setup() {
 #ifdef DEBUG
     Serial.begin(115200);
@@ -144,30 +144,19 @@ void setup() {
 #endif
 
 #ifdef DEBUG
-    Serial.println(" * Input configuration ...");
-#endif
-    pinMode(INPUT1, INPUT_PULLUP);
-    pinMode(INPUT2, INPUT_PULLUP);
-    pinMode(INPUT3, INPUT_PULLUP);
-
-#ifdef DEBUG
     Serial.println(" * I2C master configuration ...");
-    Serial.print("   -> I2C master address : 0x");
-    Serial.println(I2C_ADD, HEX);
 #endif
-    Wire.begin(I2C_ADD);
-    Wire.onReceive(I2C_RxHandler);
-    Wire.onRequest(I2C_TxHandler);
+    Wire.begin();
 
-    // Compute version String
-#ifdef DEBUG
-    Serial.println(" * Compute firmware version ...");
-#endif
-    firmwareVersion = String(TIMESTAMP) + "-" + String(COMMIT_HASH);
-#ifdef DEBUG
-    Serial.print("   -> Version : ");
-    Serial.println(firmwareVersion);
-#endif
+
+    if (!pwm.begin()) {
+        Serial.println("PCA FAILED !!");
+    }
+    pwm.setPWMFreq(200);
+    delay(100);
+
+    pwm.setPin(IN1_EA, 4096);
+    pwm.setPin(IN2_EA, 0);
 }
 
 void loop() {
@@ -176,14 +165,4 @@ void loop() {
         processRequest(7, false);
     }
 #endif
-
-    // The micro switch is connected on ground.
-    // The inputs on controller have a pullup configured by hardware
-    val_input1 = digitalRead(INPUT1) == LOW;
-    val_input2 = digitalRead(INPUT2) == LOW;
-    val_input3 = digitalRead(INPUT3) == LOW;
-
-    val_gp2d1 = readGP2D(GP2D1);
-    val_gp2d2 = readGP2D(GP2D2);
-    val_gp2d3 = readGP2D(GP2D3);
 }
