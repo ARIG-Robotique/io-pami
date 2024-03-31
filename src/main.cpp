@@ -2,6 +2,7 @@
 #include <Wire.h>
 #include <Servo.h>
 #include <I2C_Anything.h>
+#include <HeartBeat.h>
 
 #define I2C_ADD 0x55
 #define SERVO1 2
@@ -21,6 +22,8 @@ uint8_t val_gp2d2 = 0;
 uint8_t val_gp2d3 = 0;
 int val_servo1 = DEFAULT_PULSE_WIDTH;
 int val_servo2 = DEFAULT_PULSE_WIDTH;
+
+HeartBeat heartBeat;
 
 bool servo_init = false;
 Servo servo1;
@@ -151,6 +154,14 @@ void setup() {
     pinMode(INPUT3, INPUT_PULLUP);
 
 #ifdef DEBUG
+    Serial.println(" * Heart Beat configuration ...");
+    Serial.println("   -> Use LED_BUILTIN");
+    Serial.println("   -> Duty Cycle 50%");
+    Serial.println("   -> Frequency 1Hz");
+#endif
+    heartBeat.begin(LED_BUILTIN);
+
+#ifdef DEBUG
     Serial.println(" * I2C master configuration ...");
     Serial.print("   -> I2C master address : 0x");
     Serial.println(I2C_ADD, HEX);
@@ -171,6 +182,9 @@ void setup() {
 }
 
 void loop() {
+  // Heart Beat
+  heartBeat.beat();
+
 #if defined(DEBUG)
     if (Serial.available()) {
         processRequest(7, false);
