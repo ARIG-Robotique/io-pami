@@ -162,8 +162,8 @@ void setup() {
     heartBeat.begin(LED_BUILTIN);
 
 #ifdef DEBUG
-    Serial.println(" * I2C master configuration ...");
-    Serial.print("   -> I2C master address : 0x");
+    Serial.println(" * I2C slave configuration ...");
+    Serial.print("   -> I2C slave address : 0x");
     Serial.println(I2C_ADD, HEX);
 #endif
     Wire.begin(I2C_ADD);
