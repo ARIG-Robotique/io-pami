@@ -5,18 +5,18 @@
 #include <HeartBeat.h>
 
 #define I2C_ADD 0x55
-#define SERVO1 2
-#define SERVO2 3
-#define INPUT1 4
-#define INPUT2 5
-#define INPUT3 6
-#define GP2D1 A0
-#define GP2D2 A2
-#define GP2D3 A7
+#define SERVO1 5 // Gauche
+#define SERVO2 6 // Droite
+#define INPUT1 2 // uS Gauche
+#define INPUT2 4 // uS Droite
+#define WS2812 3 // PWM WS2812
+#define GP2D1 A0 // Gauche
+#define GP2D2 A7 // Centre
+#define GP2D3 A3 // Droite
 
 bool val_input1 = false;
 bool val_input2 = false;
-bool val_input3 = false;
+
 uint8_t val_gp2d1 = 0;
 uint8_t val_gp2d2 = 0;
 uint8_t val_gp2d3 = 0;
@@ -33,7 +33,6 @@ String firmwareVersion;
 void processResponse(bool wire) {
     byte inputs = val_input1 ? 1 : 0;
     inputs += val_input2 ? 2 : 0;
-    inputs += val_input3 ? 4 : 0;
     if (wire) {
         I2C_writeAnything(inputs);
         I2C_writeAnything(val_gp2d1);
@@ -44,7 +43,6 @@ void processResponse(bool wire) {
         Serial.println("Raw inputs :");
         Serial.println(val_input1);
         Serial.println(val_input2);
-        Serial.println(val_input3);
 
         Serial.println("Inputs computed :");
         Serial.println(inputs);
@@ -158,7 +156,11 @@ void setup() {
 #endif
     pinMode(INPUT1, INPUT_PULLUP);
     pinMode(INPUT2, INPUT_PULLUP);
-    pinMode(INPUT3, INPUT_PULLUP);
+
+#ifdef DEBUG
+    Serial.println(" * Output configuration ...");
+#endif
+    pinMode(WS2812, OUTPUT);
 
 #ifdef DEBUG
     Serial.println(" * Heart Beat configuration ...");
@@ -202,7 +204,6 @@ void loop() {
     // The inputs on controller have a pullup configured by hardware
     val_input1 = digitalRead(INPUT1) == LOW;
     val_input2 = digitalRead(INPUT2) == LOW;
-    val_input3 = digitalRead(INPUT3) == LOW;
 
     val_gp2d1 = readGP2D(GP2D1);
     val_gp2d2 = readGP2D(GP2D2);
