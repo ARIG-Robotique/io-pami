@@ -61,11 +61,18 @@ void processRequest(int length, boolean wire) {
     char c = wire ? Wire.read() : Serial.read();
 
     switch (c) {
-        case 0x30: // '0'
         case 0x31: // '1'
+        case 0x32: // '2'
             int val_servo;
             if (wire) {
                 I2C_readAnything(val_servo);
+#ifdef DEBUG
+                Serial.print("Servo ");
+                Serial.print(c - 0x30, HEX);
+                Serial.print(" -> 0x");
+                Serial.println(val_servo, HEX);
+#endif
+
             } else {
 #ifdef DEBUG
                 while(!Serial.available());
@@ -78,7 +85,7 @@ void processRequest(int length, boolean wire) {
                 Serial.println(val_servo, HEX);
 #endif
             }
-            if (c == 0x30) {
+            if (c == 0x31) {
                 val_servo1 = val_servo;
                 servo1.writeMicroseconds(val_servo1);
             } else {
