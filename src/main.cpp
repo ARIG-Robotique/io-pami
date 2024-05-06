@@ -17,9 +17,9 @@
 bool val_input1 = false;
 bool val_input2 = false;
 
-uint16_t val_gp2d1 = 0;
-uint16_t val_gp2d2 = 0;
-uint16_t val_gp2d3 = 0;
+int val_gp2d1 = 0;
+int val_gp2d2 = 0;
+int val_gp2d3 = 0;
 int val_servo1 = DEFAULT_PULSE_WIDTH;
 int val_servo2 = DEFAULT_PULSE_WIDTH;
 
@@ -42,9 +42,9 @@ void processResponse(bool wire) {
 #ifdef DEBUG
         Serial.println("Raw inputs :");
         Serial.println(val_input1);
-        Serial.println(val_input2);
+    Serial.println(val_input2);
 
-        Serial.println("Inputs computed :");
+    Serial.println("Inputs computed :");
         Serial.println(inputs);
 
         Serial.println("GP2Ds");
@@ -139,7 +139,7 @@ void I2C_TxHandler(void) {
 }
 
 // https://swanrobotics.com/projects/gp2d12_project/
-uint16_t readGP2D(uint8_t pin) {
+int readGP2D(uint8_t pin) {
     return analogRead(pin);
 }
 
