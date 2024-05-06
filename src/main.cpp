@@ -17,9 +17,9 @@
 bool val_input1 = false;
 bool val_input2 = false;
 
-uint8_t val_gp2d1 = 0;
-uint8_t val_gp2d2 = 0;
-uint8_t val_gp2d3 = 0;
+uint16_t val_gp2d1 = 0;
+uint16_t val_gp2d2 = 0;
+uint16_t val_gp2d3 = 0;
 int val_servo1 = DEFAULT_PULSE_WIDTH;
 int val_servo2 = DEFAULT_PULSE_WIDTH;
 
@@ -139,9 +139,8 @@ void I2C_TxHandler(void) {
 }
 
 // https://swanrobotics.com/projects/gp2d12_project/
-uint8_t readGP2D(uint8_t pin) {
-    int val = analogRead(pin);
-    return round(6787.0 / (val - 3.0)) - 4.0;
+uint16_t readGP2D(uint8_t pin) {
+    return analogRead(pin);
 }
 
 void setup() {
