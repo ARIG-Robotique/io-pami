@@ -2,17 +2,23 @@
 #include <Wire.h>
 #include <Servo.h>
 #include <I2C_Anything.h>
-#include <HeartBeat.h>
+#include <FastLED.h>
 
 #define I2C_ADD 0x55
 #define SERVO1 5 // Gauche
 #define SERVO2 6 // Droite
 #define INPUT1 2 // uS Gauche
 #define INPUT2 4 // uS Droite
-#define WS2812 3 // PWM WS2812
+#define PIN_WS2812 3 // PWM WS2812
 #define GP2D1 A0 // Gauche
 #define GP2D2 A7 // Centre
 #define GP2D3 A3 // Droite
+
+#define NUM_LEDS 3
+
+CRGB leds[NUM_LEDS];
+
+bool alt = true;
 
 bool val_input1 = false;
 bool val_input2 = false;
@@ -23,12 +29,31 @@ int val_gp2d3 = 0;
 int val_servo1 = DEFAULT_PULSE_WIDTH;
 int val_servo2 = DEFAULT_PULSE_WIDTH;
 
-HeartBeat heartBeat;
-
 bool servo_init = false;
 Servo servo1;
 Servo servo2;
 String firmwareVersion;
+
+void setLedColor(uint8_t id, uint8_t colorCode) {
+    CRGB color;
+    switch(colorCode) {
+        case 'W': color = CRGB::White;break;
+        case 'R': color = CRGB::Red;break;
+        case 'G': color = CRGB::Green;break;
+        case 'B': color = CRGB::Blue;break;
+        case 'Y': color = CRGB::Yellow;break;
+        case 'K': color = CRGB::Black;break;
+    }
+
+    if (id == 0) {
+        for (int i = 0; i < NUM_LEDS; i++) {
+            leds[i] = color;
+        }
+    } else {
+        leds[id - 1] = color;
+    }
+    FastLED.show();
+}
 
 void processResponse(bool wire) {
     byte inputs = val_input1 ? 1 : 0;
@@ -42,9 +67,9 @@ void processResponse(bool wire) {
 #ifdef DEBUG
         Serial.println("Raw inputs :");
         Serial.println(val_input1);
-    Serial.println(val_input2);
+        Serial.println(val_input2);
 
-    Serial.println("Inputs computed :");
+        Serial.println("Inputs computed :");
         Serial.println(inputs);
 
         Serial.println("GP2Ds");
@@ -121,6 +146,29 @@ void processRequest(int length, boolean wire) {
             }
             break;
 
+        case 'L':
+            uint8_t id;
+            uint8_t colorCode;
+            if (wire) {
+                I2C_readAnything(id);
+                I2C_readAnything(colorCode);
+            } else {
+#ifdef DEBUG
+                while(!Serial.available());
+                id = Serial.read() - '0';
+                while(!Serial.available());
+                colorCode = Serial.read();
+
+                Serial.print("Led ");
+                Serial.print(id);
+                Serial.print(" -> ");
+                Serial.println(colorCode);
+#endif
+            }
+
+            setLedColor(id, colorCode);
+            break;
+
         default:
 #ifdef DEBUG
             Serial.print(F("Requete inconnue "));
@@ -157,19 +205,6 @@ void setup() {
     pinMode(INPUT2, INPUT_PULLUP);
 
 #ifdef DEBUG
-    Serial.println(" * Output configuration ...");
-#endif
-    pinMode(WS2812, OUTPUT);
-
-#ifdef DEBUG
-    Serial.println(" * Heart Beat configuration ...");
-    Serial.println("   -> Use LED_BUILTIN");
-    Serial.println("   -> Duty Cycle 50%");
-    Serial.println("   -> Frequency 1Hz");
-#endif
-    heartBeat.begin(LED_BUILTIN);
-
-#ifdef DEBUG
     Serial.println(" * I2C slave configuration ...");
     Serial.print("   -> I2C slave address : 0x");
     Serial.println(I2C_ADD, HEX);
@@ -177,6 +212,18 @@ void setup() {
     Wire.begin(I2C_ADD);
     Wire.onReceive(I2C_RxHandler);
     Wire.onRequest(I2C_TxHandler);
+
+    // Configure FastLED
+#ifdef DEBUG
+    Serial.println(" * Configure FastLED ...");
+#endif
+    FastLED.addLeds<NEOPIXEL, PIN_WS2812>(leds, NUM_LEDS);
+    setLedColor(0, 'R');delay(100);
+    setLedColor(0, 'G');delay(100);
+    setLedColor(0, 'B');delay(100);
+    setLedColor(0, 'Y');delay(100);
+    setLedColor(0, 'W');delay(100);
+    setLedColor(0, 'b');delay(100);
 
     // Compute version String
 #ifdef DEBUG
@@ -190,21 +237,25 @@ void setup() {
 }
 
 void loop() {
-  // Heart Beat
-  heartBeat.beat();
-
 #if defined(DEBUG)
     if (Serial.available()) {
         processRequest(7, false);
     }
 #endif
 
+    EVERY_N_SECONDS(1) {
+        digitalWrite(LED_BUILTIN, alt ? HIGH : LOW);
+        alt = !alt;
+    }
+
     // The micro switch is connected on ground.
     // The inputs on controller have a pullup configured by hardware
     val_input1 = digitalRead(INPUT1) == LOW;
     val_input2 = digitalRead(INPUT2) == LOW;
 
+    // Read GP2D sensors
     val_gp2d1 = readGP2D(GP2D1);
     val_gp2d2 = readGP2D(GP2D2);
     val_gp2d3 = readGP2D(GP2D3);
+
 }
