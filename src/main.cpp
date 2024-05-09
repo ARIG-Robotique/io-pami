@@ -4,6 +4,8 @@
 #include <I2C_Anything.h>
 #include <FastLED.h>
 
+#define F_CPU 16000000L
+
 #define I2C_ADD 0x55
 #define SERVO1 5 // Gauche
 #define SERVO2 6 // Droite
