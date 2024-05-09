@@ -21,6 +21,7 @@
 CRGB leds[NUM_LEDS];
 
 bool alt = true;
+bool needLedRefresh = false;
 
 bool val_input1 = false;
 bool val_input2 = false;
@@ -37,6 +38,14 @@ Servo servo2;
 String firmwareVersion;
 
 void setLedColor(uint8_t id, uint8_t colorCode) {
+
+#ifdef DEBUG
+    Serial.print("Led ");
+    Serial.print(id);
+    Serial.print(" -> ");
+    Serial.println((char) colorCode);
+#endif
+
     CRGB color;
     switch(colorCode) {
         case 'W': color = CRGB::White;break;
@@ -54,7 +63,7 @@ void setLedColor(uint8_t id, uint8_t colorCode) {
     } else {
         leds[id - 1] = color;
     }
-    FastLED.show();
+    needLedRefresh = true;
 }
 
 void processResponse(bool wire) {
@@ -129,6 +138,9 @@ void processRequest(int length, boolean wire) {
             servo1.detach();
             servo2.detach();
             servo_init = false;
+#ifdef DEBUG
+            Serial.println("Detach Servo 1 & 2");
+#endif
             break;
 
         case 'F': // Serial only
@@ -140,12 +152,11 @@ void processRequest(int length, boolean wire) {
         case 'V':
             if (wire) {
                 I2C_writeAnything(firmwareVersion);
-            } else {
-#ifdef DEBUG
-                Serial.print("Version : ");
-                Serial.println(firmwareVersion);
-#endif
             }
+#ifdef DEBUG
+            Serial.print("Version : ");
+            Serial.println(firmwareVersion);
+#endif
             break;
 
         case 'L':
@@ -160,11 +171,6 @@ void processRequest(int length, boolean wire) {
                 id = Serial.read() - '0';
                 while(!Serial.available());
                 colorCode = Serial.read();
-
-                Serial.print("Led ");
-                Serial.print(id);
-                Serial.print(" -> ");
-                Serial.println(colorCode);
 #endif
             }
 
@@ -248,6 +254,11 @@ void loop() {
     EVERY_N_SECONDS(1) {
         digitalWrite(LED_BUILTIN, alt ? HIGH : LOW);
         alt = !alt;
+
+        if (needLedRefresh) {
+            needLedRefresh = false;
+            FastLED.show();
+        }
     }
 
     // The micro switch is connected on ground.
