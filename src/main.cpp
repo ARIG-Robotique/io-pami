@@ -226,12 +226,12 @@ void setup() {
     Serial.println(" * Configure FastLED ...");
 #endif
     FastLED.addLeds<NEOPIXEL, PIN_WS2812>(leds, NUM_LEDS);
-    setLedColor(0, 'R');delay(100);
     setLedColor(0, 'G');delay(100);
     setLedColor(0, 'B');delay(100);
     setLedColor(0, 'Y');delay(100);
     setLedColor(0, 'W');delay(100);
-    setLedColor(0, 'b');delay(100);
+    setLedColor(0, 'K');delay(100);
+    setLedColor(0, 'R');delay(100);
 
     // Compute version String
 #ifdef DEBUG
