@@ -8,15 +8,13 @@
 
 #define I2C_ADD 0x55
 #define SERVO1 5 // Gauche
-#define SERVO2 6 // Droite
 #define INPUT1 2 // uS Gauche
 #define INPUT2 4 // uS Droite
 #define PIN_WS2812 3 // PWM WS2812
-#define GP2D1 A0 // Gauche
-#define GP2D2 A7 // Centre
-#define GP2D3 A3 // Droite
+#define POLOLU1 A0 // Gauche
+#define POLOLU2 A7 // Droite
 
-#define NUM_LEDS 3
+#define NUM_LEDS 7
 
 CRGB leds[NUM_LEDS];
 
@@ -26,15 +24,14 @@ bool needLedRefresh = false;
 bool val_input1 = false;
 bool val_input2 = false;
 
-int val_gp2d1 = 0;
-int val_gp2d2 = 0;
-int val_gp2d3 = 0;
+bool val_pololu1 = false;
+bool val_pololu2 = false;
+
 int val_servo1 = DEFAULT_PULSE_WIDTH;
-int val_servo2 = DEFAULT_PULSE_WIDTH;
 
 bool servo_init = false;
 Servo servo1;
-Servo servo2;
+
 String firmwareVersion;
 
 void setLedColor(uint8_t id, uint8_t colorCode) {
@@ -57,8 +54,8 @@ void setLedColor(uint8_t id, uint8_t colorCode) {
     }
 
     if (id == 0) {
-        for (int i = 0; i < NUM_LEDS; i++) {
-            leds[i] = color;
+        for (auto & led : leds) {
+            led = color;
         }
     } else {
         leds[id - 1] = color;
@@ -69,24 +66,20 @@ void setLedColor(uint8_t id, uint8_t colorCode) {
 void processResponse(bool wire) {
     byte inputs = val_input1 ? 1 : 0;
     inputs += val_input2 ? 2 : 0;
+    inputs += val_pololu1 ? 4 : 0;
+    inputs += val_pololu2 ? 8 : 0;
     if (wire) {
         I2C_writeAnything(inputs);
-        I2C_writeAnything(val_gp2d1);
-        I2C_writeAnything(val_gp2d2);
-        I2C_writeAnything(val_gp2d3);
     } else {
 #ifdef DEBUG
         Serial.println("Raw inputs :");
         Serial.println(val_input1);
         Serial.println(val_input2);
+        Serial.println(val_pololu1);
+        Serial.println(val_pololu2);
 
         Serial.println("Inputs computed :");
         Serial.println(inputs);
-
-        Serial.println("GP2Ds");
-        Serial.println(val_gp2d1);
-        Serial.println(val_gp2d2);
-        Serial.println(val_gp2d3);
 #endif
     }
 }
@@ -96,7 +89,6 @@ void processRequest(int length, boolean wire) {
 
     switch (c) {
         case 0x31: // '1'
-        case 0x32: // '2'
             int val_servo;
             if (wire) {
                 I2C_readAnything(val_servo);
@@ -122,21 +114,16 @@ void processRequest(int length, boolean wire) {
             if (c == 0x31) {
                 val_servo1 = val_servo;
                 servo1.writeMicroseconds(val_servo1);
-            } else {
-                val_servo2 = val_servo;
-                servo2.writeMicroseconds(val_servo2);
             }
 
             if (!servo_init) {
                 servo1.attach(SERVO1, 500, 2500);
-                servo2.attach(SERVO2, 500, 2500);
                 servo_init = true;
             }
             break;
 
         case 'D':
             servo1.detach();
-            servo2.detach();
             servo_init = false;
 #ifdef DEBUG
             Serial.println("Detach Servo 1 & 2");
@@ -212,6 +199,9 @@ void setup() {
     pinMode(INPUT1, INPUT_PULLUP);
     pinMode(INPUT2, INPUT_PULLUP);
 
+    pinMode(POLOLU1, INPUT_PULLUP);
+    pinMode(POLOLU2, INPUT_PULLUP);
+
 #ifdef DEBUG
     Serial.println(" * I2C slave configuration ...");
     Serial.print("   -> I2C slave address : 0x");
@@ -266,9 +256,7 @@ void loop() {
     val_input1 = digitalRead(INPUT1) == LOW;
     val_input2 = digitalRead(INPUT2) == LOW;
 
-    // Read GP2D sensors
-    val_gp2d1 = readGP2D(GP2D1);
-    val_gp2d2 = readGP2D(GP2D2);
-    val_gp2d3 = readGP2D(GP2D3);
+    val_pololu1 = digitalRead(POLOLU1) == LOW;
+    val_pololu2 = digitalRead(POLOLU2) == LOW;
 
 }
