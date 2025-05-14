@@ -7,7 +7,7 @@
 #define F_CPU 16000000L
 
 #define I2C_ADD 0x55
-#define SERVO1 5 // Gauche
+#define SERVO1 5 // Droite
 #define INPUT1 2 // uS Gauche
 #define INPUT2 4 // uS Droite
 #define PIN_WS2812 3 // PWM WS2812
@@ -45,12 +45,12 @@ void setLedColor(uint8_t id, uint8_t colorCode) {
 
     CRGB color;
     switch(colorCode) {
-        case 'W': color = CRGB::White;break;
-        case 'R': color = CRGB::Red;break;
-        case 'G': color = CRGB::Green;break;
-        case 'B': color = CRGB::Blue;break;
-        case 'Y': color = CRGB::Yellow;break;
-        case 'K': color = CRGB::Black;break;
+        case 'W': color = CRGB::White;break; // 0x57
+        case 'R': color = CRGB::Red;break; // 0x52
+        case 'G': color = CRGB::Green;break; // 0x47
+        case 'B': color = CRGB::Blue;break; // 0x42
+        case 'Y': color = CRGB::Yellow;break; // 0x59
+        case 'K': color = CRGB::Black;break; // 0x4B
     }
 
     if (id == 0) {
