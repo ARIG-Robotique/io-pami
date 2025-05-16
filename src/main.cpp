@@ -7,12 +7,15 @@
 #define F_CPU 16000000L
 
 #define I2C_ADD 0x55
-#define SERVO1 5 // Droite
-#define INPUT1 2 // uS Gauche
-#define INPUT2 4 // uS Droite
+#define SERVO1 5
 #define PIN_WS2812 3 // PWM WS2812
-#define POLOLU1 A0 // Gauche
-#define POLOLU2 A7 // Droite
+#define INPUT1 2
+#define INPUT2 4
+#define INPUT3 6
+#define INPUT4 A0
+#define INPUT5 A2
+#define INPUT6 A3
+#define INPUT7 A7
 
 #define NUM_LEDS 7
 
@@ -23,9 +26,11 @@ bool needLedRefresh = false;
 
 bool val_input1 = false;
 bool val_input2 = false;
-
-bool val_pololu1 = false;
-bool val_pololu2 = false;
+bool val_input3 = false;
+bool val_input4 = false;
+bool val_input5 = false;
+bool val_input6 = false;
+bool val_input7 = false;
 
 int val_servo1 = DEFAULT_PULSE_WIDTH;
 
@@ -66,8 +71,11 @@ void setLedColor(uint8_t id, uint8_t colorCode) {
 void processResponse(bool wire) {
     byte inputs = val_input1 ? 1 : 0;
     inputs += val_input2 ? 2 : 0;
-    inputs += val_pololu1 ? 4 : 0;
-    inputs += val_pololu2 ? 8 : 0;
+    inputs += val_input3 ? 4 : 0;
+    inputs += val_input4 ? 8 : 0;
+    inputs += val_input5 ? 16 : 0;
+    inputs += val_input6 ? 32 : 0;
+    inputs += val_input7 ? 64 : 0;
     if (wire) {
         I2C_writeAnything(inputs);
     } else {
@@ -198,9 +206,11 @@ void setup() {
 #endif
     pinMode(INPUT1, INPUT_PULLUP);
     pinMode(INPUT2, INPUT_PULLUP);
-
-    pinMode(POLOLU1, INPUT_PULLUP);
-    pinMode(POLOLU2, INPUT_PULLUP);
+    pinMode(INPUT3, INPUT_PULLUP);
+    pinMode(INPUT4, INPUT_PULLUP);
+    pinMode(INPUT5, INPUT_PULLUP);
+    pinMode(INPUT6, INPUT_PULLUP);
+    pinMode(INPUT7, INPUT_PULLUP);
 
 #ifdef DEBUG
     Serial.println(" * I2C slave configuration ...");
@@ -255,8 +265,10 @@ void loop() {
     // The inputs on controller have a pullup configured by hardware
     val_input1 = digitalRead(INPUT1) == LOW;
     val_input2 = digitalRead(INPUT2) == LOW;
-
-    val_pololu1 = digitalRead(POLOLU1) == LOW;
-    val_pololu2 = digitalRead(POLOLU2) == LOW;
+    val_input3 = digitalRead(INPUT3) == LOW;
+    val_input4 = digitalRead(INPUT4) == LOW;
+    val_input5 = digitalRead(INPUT5) == LOW;
+    val_input6 = digitalRead(INPUT6) == LOW;
+    val_input7 = digitalRead(INPUT7) == LOW;
 
 }
